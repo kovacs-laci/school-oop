@@ -8,18 +8,17 @@ class Subject extends Model
 {
     public $name;
 
-    public function __construct(SubjectRepository $repository)
-    {
-        parent::__construct($repository);
+    protected function getModelClass(): string {
+        return Subject::class;
     }
+    protected static $table = 'subjects';
 
-    
+    public function __construct($name = null)
+    {
+        parent::__construct();
+        if ($name) {
+            $this->name = $name;
+        }
 
-//    function save()
-//    {
-//        return $this->repository->insert(['name' => $this->name]);
-//    }
-
-
-
+    }
 }

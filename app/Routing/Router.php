@@ -2,33 +2,47 @@
 namespace App\Routing;
 use App\Controllers\HomeController;
 use App\Controllers\SubjectController;
-use App\Database\Repositories\SubjectRepository;
 use App\Models\Subject;
+use App\Views\Display;
 
 class Router {
-    protected $routes = [];
+//    protected $routes = [];
 
-    function __construct() {
+//    function __construct() {
+//
+//    }
 
-    }
-    public function add($method, $uri, $controller) {
-        $this->routes[strtoupper($method)][$uri] = $controller;
-    }
-
-    public function dispatch($method, $uri) {
-        $method = strtoupper($method);
-
-        if (isset($this->routes[$method][$uri])) {
-            return $this->routes[$method][$uri];
-        } else {
-            // Handle 404 Not Found
-            return function() {
-                echo "404 Not Found";
-            };
+    private function handleMessages(): void
+    {
+        if (isset($_SESSION['success_message'])) {
+            Display::message($_SESSION['success_message'], 'success');
+            unset($_SESSION['success_message']); // Remove message after displaying
+        }
+        if (isset($_SESSION['warning_message'])) {
+            Display::message($_SESSION['warning_message'], 'warning');
+            unset($_SESSION['warning_message']);
         }
     }
 
+//    public function add($method, $uri, $controller) {
+//        $this->routes[strtoupper($method)][$uri] = $controller;
+//    }
+
+//    public function dispatch($method, $uri) {
+//        $method = strtoupper($method);
+//
+//        if (isset($this->routes[$method][$uri])) {
+//            return $this->routes[$method][$uri];
+//        } else {
+//            // Handle 404 Not Found
+//            return function() {
+//                echo "404 Not Found";
+//            };
+//        }
+//    }
+
     public function handle() {
+        $this->handleMessages();
         $method = strtoupper($_SERVER['REQUEST_METHOD']);
         $requestUri = $_SERVER['REQUEST_URI'];
 
@@ -65,7 +79,7 @@ class Router {
                 HomeController::index();
                 return;
             case '/subjects':
-                $subjectController = new SubjectController(new SubjectRepository());
+                $subjectController = new SubjectController(new Subject());
                 $subjectController->index();
                 break;
             default:
@@ -82,16 +96,16 @@ class Router {
         switch ($requestUri) {
             case '/subjects':
                 if (!empty($data)) {
-                    $subjectController = new SubjectController(new SubjectRepository());
+                    $subjectController = new SubjectController(new Subject());
                     $subjectController->save($data);
                 }
                 break;
             case '/subjects/create':
-                $subjectController =  new SubjectController(new SubjectRepository());
+                $subjectController =  new SubjectController(new Subject());
                 $subjectController->create();
                 break;
             case '/subjects/edit':
-                $subjectController =  new SubjectController(new SubjectRepository());
+                $subjectController =  new SubjectController(new Subject());
                 $subjectController->edit($id);
                 break;
         }
@@ -102,7 +116,7 @@ class Router {
         switch ($requestUri) {
             case '/subjects':
                 $id = $data['id'] ?? null;
-                $subjectController =  new SubjectController(new SubjectRepository());
+                $subjectController =  new SubjectController(new Subject());
                 $subjectController->update($id, $data);
                 break;
 
@@ -115,9 +129,8 @@ class Router {
         $data = $this->filterPostData($_POST);
         switch ($requestUri) {
             case '/subjects':
-                $subjectController =  new SubjectController(new SubjectRepository());
+                $subjectController =  new SubjectController(new Subject());
                 $subjectController->delete((int) $data['id']);
-//                header('Location: /subjects');
                 break;
         }
     }
