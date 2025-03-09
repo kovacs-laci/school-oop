@@ -8,12 +8,12 @@ abstract class Model
 {
     public int $id;
 
-    protected Repository $repository;
+//    protected Repository $repository;
 
-    public function __construct(Repository $repository)
-    {
-        $this->repository = $repository;
-    }
+//    public function __construct(Repository $repository)
+//    {
+//        $this->repository = $repository;
+//    }
 
     function find(int $id): ?static
     {

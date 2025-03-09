@@ -3,6 +3,23 @@ a {
     text-decoration: none;
 }
 
+.navbar {
+    display: flex;
+    gap: 10px; /* Adjust spacing between buttons as needed */
+}
+
+.nav-button {
+    padding: 10px 5px;
+    cursor: pointer;
+}
+
+.nav-list {
+    display: flex; /* Align items in a row */
+    list-style-type: none; /* Remove default bullet points */
+    padding: 0;
+    margin: 0;
+}
+
 .align-right {
     text-align: right;
 }
@@ -27,7 +44,7 @@ a {
     font-weight: normal;
 }
 
-        /* Side menu styles */
+/* Side menu styles */
 #side-menu {
     position: fixed;
     top: 0;
@@ -116,15 +133,15 @@ main {
     border-color: #a0b4ce;
 }
 
-/* Style for odd rows */
-#students-section table tbody tr:nth-child(odd) {
-    background-color: #f2f2f2;
-}
+/*!* Style for odd rows *!*/
+/*#students-section table tbody tr:nth-child(odd) {*/
+/*    background-color: #f2f2f2;*/
+/*}*/
 
-/* Style for even rows */
-#students-section table tbody tr:nth-child(even) {
-    background-color: #ffffff;
-}
+/*!* Style for even rows *!*/
+/*#students-section table tbody tr:nth-child(even) {*/
+/*    background-color: #ffffff;*/
+/*}*/
 
 /* Style for the table header */
 #students-section table thead,
@@ -137,3 +154,43 @@ main {
 .student-content table {
     width: 100%;
 }
+
+.trash {
+    color: red;
+}
+
+.plus {
+    color: green;
+}
+
+.flex {
+    display: flex;
+    gap: 5px;
+}
+
+/* Apply styles to the main table */
+#students-section > table > tbody > tr:nth-child(odd) {
+    background-color: #f2f2f2; /* Light gray for odd rows */
+}
+
+#students-section > table > tbody > tr:nth-child(even) {
+    background-color: #ffffff; /* White for even rows */
+}
+
+/* Apply styles to the nested tables */
+#students-section .student-content table tbody > tr:nth-child(odd) {
+    background-color: #e6e6e6; /* Slightly darker gray for odd rows */
+}
+
+#students-section .student-content table tbody > tr:nth-child(even) {
+    background-color: #ffffff; /* White for even rows */
+}
+
+/*tbody tr:nth-child(odd) {*/
+/*    background-color: #f2f2f2; !* Light gray for odd rows *!*/
+/*}*/
+
+/*tbody tr:nth-child(even) {*/
+/*    background-color: #ffffff; !* White for even rows *!*/
+/*}*/
+

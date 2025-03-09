@@ -3,15 +3,20 @@
 namespace App\Views;
 
 class Layout {
-    public static function header($title = "My school") {
+    public static function header($title = "Iskola") {
         echo <<<HTML
         <!DOCTYPE html>
-        <html lang="en">
+        <html lang="hu">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>{$title}</title>
-            <link rel="stylesheet" href="/css/style.css">
+        
+            <!-- Scripts -->
+            <!--            <script src="/js/school.js" type="text/javascript"></script>-->
+            <!-- Styles -->
+            <link href="/css/school.css" rel="stylesheet" type="text/css">
+            <link href="/fontawesome/css/all.css" rel="stylesheet" type="text/css">
         </head>
         <body>
         HTML;
@@ -22,10 +27,10 @@ class Layout {
 
     public static function navbar() {
         echo <<<HTML
-        <nav>
-            <ul>
-                <li><a href="/">Kezdőlap</a></li>
-                <li><a href="/subjects">Tantárgyak</a></li>
+        <nav class="navbar">
+            <ul class="nav-list">
+                <li class="nav-button"><a href="/"><button style="button" title="Kezdőlap">Kezdőlap</button></a></li>
+                <li class="nav-button"><a href="/subjects"><button style="button" title="Tantárgyak">Tantárgyak</button></a></li>
             </ul>
         </nav>
         HTML;

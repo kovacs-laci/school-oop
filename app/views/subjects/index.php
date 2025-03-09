@@ -29,7 +29,7 @@ $html = <<<HTML
                     <th>Tantárgy</th>
                     <th>
                         <form method='post' action='/subjects/create'>
-                            <button type="submit" name='btn-plus' title='Új'><i class='fa fa-plus plus'></i></button>
+                            <button type="submit" name='btn-plus' title='Új'><i class='fa fa-plus plus'></i>&nbsp;Új</button>
                         </form>
                     </th>
                 </tr>

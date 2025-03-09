@@ -4,8 +4,10 @@ echo <<<HTML
             <fieldset>
                 <label for="name">Tantárgy</label>
                 <input type="text" name="name" id="name">
+                <hr>
+                <button type="submit" name="btn-save"><i class="fa fa-save"></i>&nbsp;Mentés</button>
+                <a href="/subjects"><i class="fa fa-cancel"></i>&nbsp;Mégse</a>
             </fieldset>
-            <button type="submit" name="btn-save">Mentés</button>
-            <a href="/subjects">Mégse</a>
+            
         </form>
     HTML;
