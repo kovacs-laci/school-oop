@@ -6,43 +6,27 @@ use App\Models\Subject;
 use App\Views\Display;
 
 class Router {
-//    protected $routes = [];
-
-//    function __construct() {
-//
-//    }
 
     private function handleMessages(): void
     {
-        if (isset($_SESSION['success_message'])) {
-            Display::message($_SESSION['success_message'], 'success');
-            unset($_SESSION['success_message']); // Remove message after displaying
-        }
-        if (isset($_SESSION['warning_message'])) {
-            Display::message($_SESSION['warning_message'], 'warning');
-            unset($_SESSION['warning_message']);
+        $messages = [
+            'success_message' => 'success',
+            'warning_message' => 'warning',
+            'error_message' => 'error',
+        ];
+
+        foreach ($messages as $key => $type) {
+            if (isset($_SESSION[$key])) {
+                Display::message($_SESSION[$key], $type);
+                unset($_SESSION[$key]); // Remove the message after displaying
+            }
         }
     }
 
-//    public function add($method, $uri, $controller) {
-//        $this->routes[strtoupper($method)][$uri] = $controller;
-//    }
-
-//    public function dispatch($method, $uri) {
-//        $method = strtoupper($method);
-//
-//        if (isset($this->routes[$method][$uri])) {
-//            return $this->routes[$method][$uri];
-//        } else {
-//            // Handle 404 Not Found
-//            return function() {
-//                echo "404 Not Found";
-//            };
-//        }
-//    }
-
-    public function handle() {
+    public function handle(): void
+    {
         $this->handleMessages();
+
         $method = strtoupper($_SERVER['REQUEST_METHOD']);
         $requestUri = $_SERVER['REQUEST_URI'];
 
@@ -51,6 +35,12 @@ class Router {
             $method = strtoupper($_POST['_method']);
         }
 
+        // Dispatch the request
+        $this->dispatch($method, $requestUri);
+    }
+
+    private function dispatch(string $method, string $requestUri): void
+    {
         switch ($method) {
             case 'GET':
                 $this->handleGetRequests($requestUri);
@@ -65,12 +55,9 @@ class Router {
                 $this->handleDeleteRequests($requestUri);
                 break;
             default:
-                // Handle unsupported methods or return a 405 Method Not Allowed
-                header($_SERVER['SERVER_PROTOCOL'] . ' 405 Method Not Allowed');
-                echo "405 Method Not Allowed";
+                $this->methodNotAllowed();
         }
     }
-
 
     private function handleGetRequests(mixed $requestUri)
     {
@@ -83,7 +70,7 @@ class Router {
                 $subjectController->index();
                 break;
             default:
-                // 404
+                $this->notFound();
 
         }
     }
@@ -108,6 +95,8 @@ class Router {
                 $subjectController =  new SubjectController(new Subject());
                 $subjectController->edit($id);
                 break;
+            default:
+                $this->notFound();
         }
     }
 
@@ -119,9 +108,8 @@ class Router {
                 $subjectController =  new SubjectController(new Subject());
                 $subjectController->update($id, $data);
                 break;
-
             default:
-                echo "404 Not Found";
+                $this->notFound();
         }
     }
 
@@ -132,22 +120,28 @@ class Router {
                 $subjectController =  new SubjectController(new Subject());
                 $subjectController->delete((int) $data['id']);
                 break;
+            default:
+                $this->notFound();
         }
     }
 
-    private function filterPostData($data)
+    private function filterPostData(array $data): array
     {
-        if (empty($data)) {
-            return $data;
-        }
-        $filter = array_flip(['_method', 'submit', 'btn-del', 'btn-save', 'btn-edit', 'btn-plus', 'btn-update']);
-        foreach ($data as $key => $value) {
-            if (isset($filter[$key])) {
-                unset($data[$key]);
-            }
-        }
+        // Remove unnecessary keys in a clean and simple way
+        $filterKeys = ['_method', 'submit', 'btn-del', 'btn-save', 'btn-edit', 'btn-plus', 'btn-update'];
+        return array_diff_key($data, array_flip($filterKeys));
+    }
 
-        return $data;
+    private function notFound(): void
+    {
+        header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+        echo "404 Not Found";
+    }
+
+    private function methodNotAllowed(): void
+    {
+        header($_SERVER['SERVER_PROTOCOL'] . ' 405 Method Not Allowed');
+        echo "405 Method Not Allowed";
     }
 
 }
