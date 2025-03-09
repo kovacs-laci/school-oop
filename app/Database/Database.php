@@ -8,38 +8,47 @@ use App\Views\Display;
 
 class Database
 {
-    private const HOST = 'localhost';
-    private const USER = 'root';
-    private const PASSWORD = null;
-    private const DATABASE = 'school';
-    private static ?Database $instance = null;
+    protected const DEFAULT_CONFIG = [
+        'host' => 'localhost',
+        'user' => 'root',
+        'password' => null,
+        'database' => 'school',
+    ];
+
+    protected static ?Database $instance = null;
     private PDO $pdo;
 
-    private function __construct(
-        $host = self::HOST,
-        $user = self::USER,
-        $password = self::PASSWORD,
-        $database = self::DATABASE
-    ) {
+    private function __construct(array $config)
+    {
+        $host = $config['host'] ?? self::DEFAULT_CONFIG['host'];
+        $user = $config['user'] ?? self::DEFAULT_CONFIG['user'];
+        $password = $config['password'] ?? self::DEFAULT_CONFIG['password'];
+        $database = $config['database'] ?? self::DEFAULT_CONFIG['database'];
+
         try {
             $dsn = "mysql:host=$host;dbname=$database;charset=utf8mb4";
             $this->pdo = new PDO($dsn, $user, $password, [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, // Enable exception mode
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, // Enable exception mode
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,       // Fetch as associative array
-                PDO::ATTR_EMULATE_PREPARES   => false,                  // Use real prepared statements
+                PDO::ATTR_EMULATE_PREPARES => false,                  // Use real prepared statements
             ]);
         } catch (PDOException $e) {
             error_log($e->getMessage());
-            die("Database connection error, please try again later.");
+            throw new \RuntimeException("Database connection error.");
         }
     }
 
-    public static function getInstance(): Database
+    public static function getInstance(array $config = []): Database
     {
         if (self::$instance === null) {
-            self::$instance = new self();
+            self::$instance = new self($config);
         }
         return self::$instance;
+    }
+
+    public function getPdo(): PDO
+    {
+        return $this->pdo;
     }
 
     public function execSql(string $sql, array $params = []): bool|int|array

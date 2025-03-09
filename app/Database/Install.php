@@ -2,7 +2,8 @@
 
 namespace App\Database;
 
-use App\Database\Database;
+use App\Views\Display;
+use Exception;
 
 class Install extends Database
 {
@@ -15,7 +16,7 @@ class Install extends Database
                 return false;
             }
 
-            $query = sprintf("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '%s';", self::DATABASE);
+            $query = sprintf("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '%s';", self::DEFAULT_CONFIG['database']);
             $result = $mysqli->query($query);
 
             if (!$result) {
@@ -39,21 +40,26 @@ class Install extends Database
 
     }
 
-    function createTable($tableBody, $tableName, $dbName = DB_NAME): bool
+    public function createTable(string $tableName, string $tableBody, string $dbName): bool
     {
+        try {
+            $sql = "
+                CREATE TABLE `$dbName`.`$tableName`
+                ($tableBody)
+                ENGINE = InnoDB
+                DEFAULT CHARACTER SET = utf8
+                COLLATE = utf8_hungarian_ci;
+            ";
+            return (bool) $this->execSql($sql);
 
-        $sql = sprintf("
-            CREATE TABLE `" . $dbName . "`.`$tableName` 
-            (%s)
-            ENGINE = InnoDB
-            DEFAULT CHARACTER SET = utf8
-            COLLATE = utf8_hungarian_ci;
-        ", $tableBody);
-
-        return $this->execSql($sql);
+        } catch (Exception $e) {
+            Display::message($e->getMessage(), 'error');
+            error_log($e->getMessage());
+            return false;
+        }
     }
 
-    function createTableSubjects($dbName = DB_NAME): bool
+    function createTableSubjects($dbName = self::DEFAULT_CONFIG['database']): bool
     {
         $tableBody = "
             `id` INT NOT NULL AUTO_INCREMENT,
@@ -63,7 +69,7 @@ class Install extends Database
 
         return createTable($tableBody, 'subjects',  $dbName);
     }
-    function createTableClasses($dbName = DB_NAME): bool
+    function createTableClasses($dbName = self::DEFAULT_CONFIG['database']): bool
     {
         $tableBody = "
             `id` INT NOT NULL AUTO_INCREMENT,
@@ -73,7 +79,7 @@ class Install extends Database
         return createTable($tableBody, "classes", $dbName);
     }
 
-    function createTableStudents($dbName = DB_NAME): bool
+    function createTableStudents($dbName = self::DEFAULT_CONFIG['database']): bool
     {
         $tableBody = "
             `id` INT NOT NULL AUTO_INCREMENT,
@@ -86,7 +92,7 @@ class Install extends Database
         return createTable($tableBody, "students", $dbName);
     }
 
-    function createTableMarks($dbName = DB_NAME): bool
+    function createTableMarks($dbName = self::DEFAULT_CONFIG['database']): bool
     {
         $tableBody = "
             `id` INT NOT NULL AUTO_INCREMENT,
