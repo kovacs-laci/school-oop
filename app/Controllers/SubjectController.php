@@ -1,82 +1,78 @@
 <?php
 namespace App\Controllers;
-use App\Database\Repositories\Repository;
-use App\Database\Repositories\SubjectRepository;
-use App\Models\Model;
 use App\Models\Subject;
 use App\Views\View;
 
 class SubjectController extends Controller {
 
-//    public function __construct() {
-//        $subjectRepository = new SubjectRepository();
-//        parent::__construct(new Subject($subjectRepository));
-//    }
-
-    public function __construct(SubjectRepository $repository)
+    public function __construct(Subject $subject)
     {
-        parent::__construct($repository);
+        parent::__construct($subject);
     }
 
-    public function index() {
-        $subjects = $this->repository->getAll(['orderBy' => ['name'], 'order' => ['ASC']]);
-        View::render('subjects/index', ['subjects' => $subjects]);
-    }
-
-    public function create() {
-        View::render('subjects/create');
-    }
-    public function edit(int $id) {
-        $subject = $this->repository->findOne($id);
-        View::render('subjects/edit', ['subject' => $subject]);
-    }
-
-    public function save(array $data)
+    public function index(): void
     {
-        $subject = new Subject(new SubjectRepository());
+        $subjects = $this->model->all(['orderBy' => ['name'], 'direction' => ['ASC']]);
+        $this->render('subjects/index', ['subjects' => $subjects]);
+    }
+
+    public function create(): void
+    {
+        $this->render('subjects/create');
+    }
+    public function edit(int $id): void
+    {
+        $subject = $this->model->find($id);
+        if (!$subject) {
+            // Handle invalid ID gracefully
+            $_SESSION['warning_message'] = "A tantárgy a megadott azonosítóval: $id nem található.";
+            $this->redirect('/subjects');
+        }
+        $this->render('subjects/edit', ['subject' => $subject]);
+    }
+
+    public function save(array $data): void
+    {
+        if (empty($data['name'])) {
+            $_SESSION['warning_message'] = "A tantárgy neve kötelező mező.";
+            $this->redirect('/subjects/create'); // Redirect if input is invalid
+        }
+        // Use the existing model instance
+        $this->model->name = $data['name'];
+        $this->model->create();
+        $this->redirect('/subjects');
+    }
+
+    public function update(int $id, array $data): void
+    {
+        $subject = $this->model->find($id);
+        if (!$subject || empty($data['name'])) {
+            // Handle invalid ID or data
+            $this->redirect('/subjects');
+        }
         $subject->name = $data['name'];
-        $subject->save();
-        header('Location: /subjects');
+        $subject->update();
+        $this->redirect('/subjects');
     }
 
-    public function update(int $id, array $data)
+    function show(int $id): void
     {
-        $subject = $this->repository->findOne($id);
-        $subject->name = $data['name'];
-        $subject->save();
-        header('Location: /subjects');
+        $subject = $this->model->find($id);
+        if (!$subject) {
+            $_SESSION['warning_message'] = "A tantárgy a megadott azonosítóval: $id nem található.";
+            $this->redirect('/subjects'); // Handle invalid ID
+        }
+        $this->render('subjects/show', ['subject' => $subject]);
     }
 
-//    public function add() {
-//        if ($_SERVER["REQUEST_METHOD"] === "POST") {
-//            $name = $_POST["name"] ?? '';
-//            if (!empty($name)) {
-//                $this->model->createSubject($name);
-//                header("Location: /subjects/index");
-//                exit;
-//            }
-//        }
-//        View::render('subjects/add', ['title' => 'Add Subject']);
-//    }
-    function show(int $id)
+    function delete(int $id): void
     {
-        // TODO: Implement show() method.
+        $subject = $this->model->find($id);
+        if ($subject) {
+            $subject->delete();
+        }
+        $_SESSION['success_message'] = 'Sikeresen törölve';
+        $this->redirect('/subjects'); // Redirect regardless of success
     }
 
-    function delete(int $id)
-    {
-        $subject = $this->repository->findOne($id);
-        $subject->delete();
-        header('Location: /subjects');
-    }
-
-//    function add()
-//    {
-//        // TODO: Implement add() method.
-//    }
-//
-//    function get()
-//    {
-//        // TODO: Implement get() method.
-//    }
 }

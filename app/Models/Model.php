@@ -2,47 +2,142 @@
 
 namespace App\Models;
 
+use App\Database\Database;
 use App\Database\Repositories\Repository;
+use App\Interfaces\ModelInterface;
 
-abstract class Model
+abstract class Model implements ModelInterface
 {
     public int $id;
 
-//    protected Repository $repository;
+    protected $db;
 
-//    public function __construct(Repository $repository)
-//    {
-//        $this->repository = $repository;
-//    }
+    protected static $table;
+
+    public function __construct() {
+        $this->db = Database::getInstance();
+    }
+
+    function mapToModel(array $data): Model {
+        $modelClass = $this->getModelClass();
+        $model = new $modelClass($this);
+
+        foreach ($data as $key => $value) {
+            if (property_exists($model, $key)) {
+                $model->$key = $value;
+            }
+        }
+
+        return $model;
+    }
+
+    protected function getModelClass(): string {
+        return static::class;
+    }
+
+    static function select(): string
+    {
+        return "SELECT * FROM `" . static::$table . "` ";
+    }
 
     function find(int $id): ?static
     {
-        return $this->repository->findOne($id);
+        $sql = self::select() . " WHERE id = :id";
 
-//        return $result ? $this->fromArray($result[0]) : null;
+        $qryResult = $this->db->execSql($sql, ['id' => $id]);
+        if (empty($qryResult)) {
+            return null;
+        }
+
+        return $this->mapToModel($qryResult[0]);
     }
 
-    function all($orderBy = []): array
+    function all($orderConfig = []): array
     {
-        return $this->repository->getAll($orderBy = []);
+        $sql = self::select();
+
+        if (!empty($orderConfig)) {
+            $orderByClauses = [];
+
+            // Extract 'orderBy' and 'direction' fields
+            $fields = $orderConfig['orderBy'] ?? [];
+            $directions = $orderConfig['direction'] ?? [];
+
+            foreach ($fields as $index => $field) {
+                // Use the corresponding direction or default to 'ASC'
+                $direction = $directions[$index] ?? 'ASC';
+                $orderByClauses[] = "$field $direction";
+            }
+
+            if (!empty($orderByClauses)) {
+                $sql .= " ORDER BY " . implode(', ', $orderByClauses) . ";";
+            }
+        }
+        $qryResult = $this->db->execSql($sql);
+
+        if (empty($qryResult)) {
+            return [];
+        }
+
+        $results = [];
+        foreach ($qryResult as $row) {
+            $results[] = $this->mapToModel($row);
+        }
+
+        return $results;
     }
 
     function delete()
     {
-        return $this->repository->delete($this->id);
+        $sql = "DELETE FROM `" . static::$table . "` WHERE id = :id";
+
+        return $this->db->execSql($sql, ['id' => $this->id]);
     }
 
-    public function save(): int
+    public function create()
     {
-        // Check if the model already exists (based on `id`)
-        if (isset($this->id)) {
-            // Call the repository's update method for existing records
-            return $this->repository->update($this);
-        }
-        // Call the repository's insert method for new records
-        $insertedId = $this->repository->insert($this);
-        $this->id = $insertedId; // Set the id to the inserted record's ID
-        return $insertedId;
+        $properties = get_object_vars($this);
+        // Exclude 'id', it is auto-incremented
+        unset($properties['id']);
+        unset($properties['db']);
+        unset($properties['table']);
 
+        $columns = implode(', ', array_keys($properties));
+
+        $placeholders = [];
+        foreach (array_keys($properties) as $key) {
+            $placeholders[] = ":$key";
+        }
+        $placeholders = implode(', ', $placeholders);
+
+        $sql = "INSERT INTO `" . static::$table . "` ($columns) VALUES ($placeholders)";
+
+        return $this->db->execSql($sql, $properties);
+    }
+
+    public function update()
+    {
+        $properties = get_object_vars($this);
+        unset($properties['db']);
+        unset($properties['table']);
+        $id = $properties['id'] ?? null;
+
+        if (!$id) {
+            throw new \Exception("Cannot update a record without an ID.");
+        }
+
+        unset($properties['id']); // Exclude 'id' for the update values
+
+        $setClauseParts = [];
+        foreach (array_keys($properties) as $key) {
+            $setClauseParts[] = "$key = :$key";
+        }
+        $setClause = implode(', ', $setClauseParts);
+
+        $sql = "UPDATE `" . static::$table . "` SET $setClause WHERE id = :id";
+        // Add 'id' back for the WHERE clause
+        $properties['id'] = $id;
+
+        return $this->db->execSql($sql, $properties);
     }
 }

@@ -2,33 +2,31 @@
 namespace App\Routing;
 use App\Controllers\HomeController;
 use App\Controllers\SubjectController;
-use App\Database\Repositories\SubjectRepository;
 use App\Models\Subject;
+use App\Views\Display;
 
 class Router {
-    protected $routes = [];
 
-    function __construct() {
+    private function handleMessages(): void
+    {
+        $messages = [
+            'success_message' => 'success',
+            'warning_message' => 'warning',
+            'error_message' => 'error',
+        ];
 
-    }
-    public function add($method, $uri, $controller) {
-        $this->routes[strtoupper($method)][$uri] = $controller;
-    }
-
-    public function dispatch($method, $uri) {
-        $method = strtoupper($method);
-
-        if (isset($this->routes[$method][$uri])) {
-            return $this->routes[$method][$uri];
-        } else {
-            // Handle 404 Not Found
-            return function() {
-                echo "404 Not Found";
-            };
+        foreach ($messages as $key => $type) {
+            if (isset($_SESSION[$key])) {
+                Display::message($_SESSION[$key], $type);
+                unset($_SESSION[$key]); // Remove the message after displaying
+            }
         }
     }
 
-    public function handle() {
+    public function handle(): void
+    {
+        $this->handleMessages();
+
         $method = strtoupper($_SERVER['REQUEST_METHOD']);
         $requestUri = $_SERVER['REQUEST_URI'];
 
@@ -37,6 +35,12 @@ class Router {
             $method = strtoupper($_POST['_method']);
         }
 
+        // Dispatch the request
+        $this->dispatch($method, $requestUri);
+    }
+
+    private function dispatch(string $method, string $requestUri): void
+    {
         switch ($method) {
             case 'GET':
                 $this->handleGetRequests($requestUri);
@@ -51,12 +55,9 @@ class Router {
                 $this->handleDeleteRequests($requestUri);
                 break;
             default:
-                // Handle unsupported methods or return a 405 Method Not Allowed
-                header($_SERVER['SERVER_PROTOCOL'] . ' 405 Method Not Allowed');
-                echo "405 Method Not Allowed";
+                $this->methodNotAllowed();
         }
     }
-
 
     private function handleGetRequests(mixed $requestUri)
     {
@@ -65,11 +66,11 @@ class Router {
                 HomeController::index();
                 return;
             case '/subjects':
-                $subjectController = new SubjectController(new SubjectRepository());
+                $subjectController = new SubjectController(new Subject());
                 $subjectController->index();
                 break;
             default:
-                // 404
+                $this->notFound();
 
         }
     }
@@ -82,18 +83,20 @@ class Router {
         switch ($requestUri) {
             case '/subjects':
                 if (!empty($data)) {
-                    $subjectController = new SubjectController(new SubjectRepository());
+                    $subjectController = new SubjectController(new Subject());
                     $subjectController->save($data);
                 }
                 break;
             case '/subjects/create':
-                $subjectController =  new SubjectController(new SubjectRepository());
+                $subjectController =  new SubjectController(new Subject());
                 $subjectController->create();
                 break;
             case '/subjects/edit':
-                $subjectController =  new SubjectController(new SubjectRepository());
+                $subjectController =  new SubjectController(new Subject());
                 $subjectController->edit($id);
                 break;
+            default:
+                $this->notFound();
         }
     }
 
@@ -102,12 +105,11 @@ class Router {
         switch ($requestUri) {
             case '/subjects':
                 $id = $data['id'] ?? null;
-                $subjectController =  new SubjectController(new SubjectRepository());
+                $subjectController =  new SubjectController(new Subject());
                 $subjectController->update($id, $data);
                 break;
-
             default:
-                echo "404 Not Found";
+                $this->notFound();
         }
     }
 
@@ -115,26 +117,31 @@ class Router {
         $data = $this->filterPostData($_POST);
         switch ($requestUri) {
             case '/subjects':
-                $subjectController =  new SubjectController(new SubjectRepository());
+                $subjectController =  new SubjectController(new Subject());
                 $subjectController->delete((int) $data['id']);
-//                header('Location: /subjects');
                 break;
+            default:
+                $this->notFound();
         }
     }
 
-    private function filterPostData($data)
+    private function filterPostData(array $data): array
     {
-        if (empty($data)) {
-            return $data;
-        }
-        $filter = array_flip(['_method', 'submit', 'btn-del', 'btn-save', 'btn-edit', 'btn-plus', 'btn-update']);
-        foreach ($data as $key => $value) {
-            if (isset($filter[$key])) {
-                unset($data[$key]);
-            }
-        }
+        // Remove unnecessary keys in a clean and simple way
+        $filterKeys = ['_method', 'submit', 'btn-del', 'btn-save', 'btn-edit', 'btn-plus', 'btn-update'];
+        return array_diff_key($data, array_flip($filterKeys));
+    }
 
-        return $data;
+    private function notFound(): void
+    {
+        header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+        echo "404 Not Found";
+    }
+
+    private function methodNotAllowed(): void
+    {
+        header($_SERVER['SERVER_PROTOCOL'] . ' 405 Method Not Allowed');
+        echo "405 Method Not Allowed";
     }
 
 }
