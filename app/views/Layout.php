@@ -10,7 +10,7 @@ class Layout {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>{$title}</title>
+            <title>$title</title>
         
             <!-- Scripts -->
             <!--            <script src="/js/school.js" type="text/javascript"></script>-->
@@ -20,11 +20,26 @@ class Layout {
         </head>
         <body>
         HTML;
-
         self::navbar(); // Call navbar at the top of the page
+        self::handleMessages();
         echo '<div class="container">';
     }
 
+    private static function handleMessages(): void
+    {
+        $messages = [
+            'success_message' => 'success',
+            'warning_message' => 'warning',
+            'error_message' => 'error',
+        ];
+
+        foreach ($messages as $key => $type) {
+            if (isset($_SESSION[$key])) {
+                Display::message($_SESSION[$key], $type);
+                unset($_SESSION[$key]); // Remove the message after displaying
+            }
+        }
+    }
     public static function navbar() {
         echo <<<HTML
         <nav class="navbar">

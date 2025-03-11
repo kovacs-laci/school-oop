@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Database\Repositories\Repository;
 use App\Interfaces\ControllerInterface;
 use App\Models\Model;
 use App\Views\View;

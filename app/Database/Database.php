@@ -71,7 +71,7 @@ class Database
             return $stmt->rowCount() > 0;
 
         } catch (PDOException $e) {
-            Display::message($e->getMessage(), 'error');
+            $_SESSION['error_message'] = $e->getMessage();
             error_log($e->getMessage());
             return false;
         }

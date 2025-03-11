@@ -2,31 +2,11 @@
 namespace App\Routing;
 use App\Controllers\HomeController;
 use App\Controllers\SubjectController;
-use App\Models\Subject;
-use App\Views\Display;
 
 class Router {
 
-    private function handleMessages(): void
-    {
-        $messages = [
-            'success_message' => 'success',
-            'warning_message' => 'warning',
-            'error_message' => 'error',
-        ];
-
-        foreach ($messages as $key => $type) {
-            if (isset($_SESSION[$key])) {
-                Display::message($_SESSION[$key], $type);
-                unset($_SESSION[$key]); // Remove the message after displaying
-            }
-        }
-    }
-
     public function handle(): void
     {
-        $this->handleMessages();
-
         $method = strtoupper($_SERVER['REQUEST_METHOD']);
         $requestUri = $_SERVER['REQUEST_URI'];
 
@@ -66,7 +46,7 @@ class Router {
                 HomeController::index();
                 return;
             case '/subjects':
-                $subjectController = new SubjectController(new Subject());
+                $subjectController = new SubjectController();
                 $subjectController->index();
                 break;
             default:
@@ -83,16 +63,16 @@ class Router {
         switch ($requestUri) {
             case '/subjects':
                 if (!empty($data)) {
-                    $subjectController = new SubjectController(new Subject());
+                    $subjectController = new SubjectController();
                     $subjectController->save($data);
                 }
                 break;
             case '/subjects/create':
-                $subjectController =  new SubjectController(new Subject());
+                $subjectController =  new SubjectController();
                 $subjectController->create();
                 break;
             case '/subjects/edit':
-                $subjectController =  new SubjectController(new Subject());
+                $subjectController =  new SubjectController();
                 $subjectController->edit($id);
                 break;
             default:
@@ -105,7 +85,7 @@ class Router {
         switch ($requestUri) {
             case '/subjects':
                 $id = $data['id'] ?? null;
-                $subjectController =  new SubjectController(new Subject());
+                $subjectController =  new SubjectController();
                 $subjectController->update($id, $data);
                 break;
             default:
@@ -115,9 +95,10 @@ class Router {
 
     private function handleDeleteRequests(mixed $requestUri) {
         $data = $this->filterPostData($_POST);
+
         switch ($requestUri) {
             case '/subjects':
-                $subjectController =  new SubjectController(new Subject());
+                $subjectController = new SubjectController();
                 $subjectController->delete((int) $data['id']);
                 break;
             default:

@@ -1,18 +1,19 @@
 <?php
 namespace App\Controllers;
 use App\Models\Subject;
-use App\Views\View;
+use App\Views\Display;
 
 class SubjectController extends Controller {
 
-    public function __construct(Subject $subject)
+    public function __construct()
     {
+        $subject = new Subject();
         parent::__construct($subject);
     }
 
     public function index(): void
     {
-        $subjects = $this->model->all(['orderBy' => ['name'], 'direction' => ['ASC']]);
+        $subjects = $this->model->all(['order_by' => ['name'], 'direction' => ['ASC']]);
         $this->render('subjects/index', ['subjects' => $subjects]);
     }
 
@@ -69,9 +70,12 @@ class SubjectController extends Controller {
     {
         $subject = $this->model->find($id);
         if ($subject) {
-            $subject->delete();
+            $result = $subject->delete();
+            if ($result) {
+                $_SESSION['success_message'] = 'Sikeresen törölve';
+            }
         }
-        $_SESSION['success_message'] = 'Sikeresen törölve';
+
         $this->redirect('/subjects'); // Redirect regardless of success
     }
 

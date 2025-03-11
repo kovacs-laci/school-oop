@@ -8,6 +8,5 @@ echo <<<HTML
                 <button type="submit" name="btn-save"><i class="fa fa-save"></i>&nbsp;Mentés</button>
                 <a href="/subjects"><i class="fa fa-cancel"></i>&nbsp;Mégse</a>
             </fieldset>
-            
         </form>
     HTML;

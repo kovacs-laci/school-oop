@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Database\Database;
-use App\Database\Repositories\Repository;
 use App\Interfaces\ModelInterface;
 
 abstract class Model implements ModelInterface
@@ -19,9 +18,7 @@ abstract class Model implements ModelInterface
     }
 
     function mapToModel(array $data): Model {
-        $modelClass = $this->getModelClass();
-        $model = new $modelClass($this);
-
+        $model = new static(); // Creates an instance of the current model
         foreach ($data as $key => $value) {
             if (property_exists($model, $key)) {
                 $model->$key = $value;
@@ -31,13 +28,34 @@ abstract class Model implements ModelInterface
         return $model;
     }
 
-    protected function getModelClass(): string {
-        return static::class;
-    }
-
     static function select(): string
     {
         return "SELECT * FROM `" . static::$table . "` ";
+    }
+
+    static function orderBy($orderBy = []): string
+    {
+        if (empty($orderBy)) {
+            return "";
+        }
+
+        $orderByClauses = [];
+
+        // Extract 'orderBy' and 'direction' fields
+        $fields = $orderBy['order_by'] ?? [];
+        $directions = $orderBy['direction'] ?? [];
+
+        foreach ($fields as $index => $field) {
+            // Use the corresponding direction or default to 'ASC'
+            $direction = $directions[$index] ?? 'ASC';
+            $orderByClauses[] = "$field $direction";
+        }
+
+        if (empty($orderByClauses)) {
+            return "";
+        }
+
+        return " ORDER BY " . implode(', ', $orderByClauses) . ";";
     }
 
     function find(int $id): ?static
@@ -52,27 +70,12 @@ abstract class Model implements ModelInterface
         return $this->mapToModel($qryResult[0]);
     }
 
-    function all($orderConfig = []): array
+    function all($orderBy = []): array
     {
         $sql = self::select();
 
-        if (!empty($orderConfig)) {
-            $orderByClauses = [];
+        $sql .= self::orderBy($orderBy);
 
-            // Extract 'orderBy' and 'direction' fields
-            $fields = $orderConfig['orderBy'] ?? [];
-            $directions = $orderConfig['direction'] ?? [];
-
-            foreach ($fields as $index => $field) {
-                // Use the corresponding direction or default to 'ASC'
-                $direction = $directions[$index] ?? 'ASC';
-                $orderByClauses[] = "$field $direction";
-            }
-
-            if (!empty($orderByClauses)) {
-                $sql .= " ORDER BY " . implode(', ', $orderByClauses) . ";";
-            }
-        }
         $qryResult = $this->db->execSql($sql);
 
         if (empty($qryResult)) {
