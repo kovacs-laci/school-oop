@@ -126,7 +126,8 @@ abstract class Model implements ModelInterface
         $id = $properties['id'] ?? null;
 
         if (!$id) {
-            throw new \Exception("Cannot update a record without an ID.");
+            $_SESSION['error_message'] = "Egyedi azonosító nincs megadva!";
+            return false;
         }
 
         unset($properties['id']); // Exclude 'id' for the update values

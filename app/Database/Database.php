@@ -4,7 +4,6 @@ namespace App\Database;
 
 use PDO;
 use PDOException;
-use App\Views\Display;
 
 class Database
 {
