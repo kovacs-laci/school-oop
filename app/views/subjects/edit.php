@@ -1,5 +1,5 @@
 <?php
-$html = <<<HTML
+    $html = <<<HTML
         <form method='post' action='/subjects'>
             <input type='hidden' name='_method' value='PATCH'>
             <input type="hidden" name="id" value="{$subject->id}">
@@ -12,5 +12,4 @@ $html = <<<HTML
             </fieldset>
         </form>
     HTML;
-
-echo $html;
+    echo $html;

@@ -16,7 +16,6 @@ class View
         // Render with layout if enabled
         if ($useLayout) {
             Layout::header($data['title'] ?? 'Iskola');
-            // Layout::sidebar(); // Uncomment if needed
         }
 
         // Capture variables for the view
